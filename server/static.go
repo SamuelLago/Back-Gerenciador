@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("../public"))
+	fs := http.FileServer(http.Dir("../../Front-Gerenciador/public"))
 	http.Handle("/", fs)
 
 	log.Println("Executando...")
