@@ -8,22 +8,27 @@ import (
 	"time"
 )
 
+// New configura o servidor e as rotas
 func New() {
-	mux := http.NewServeMux() //Multiplexizador de requisicao ==> Aceitar varias requsicoes ao mesmo tempo (Exemplo ingressos) // NewServeMux ==> Configurar servidor
+	mux := http.NewServeMux() // Multiplexador de requisições
 
-	mux.HandleFunc("/health", greet) // Caminho // funcao executada
+	mux.HandleFunc("/health", greet) // Configura a rota "/health"
+	mux.HandleFunc("/add", register) // Configura a rota "/add"
 
-	mux.HandleFunc("/add", register)
-
-	http.ListenAndServe(":5555", mux) // ListenAndServe ==> Criar localhost
+	fmt.Println("Server is running on http://localhost:5555")
+	http.ListenAndServe(":5555", mux) // Inicia o servidor na porta 5555
 }
 
-func greet(w http.ResponseWriter, r *http.Request) { // w resposta para usuario // requisicao do usuario
+// greet responde com uma mensagem simples
+func greet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Permite requisições de qualquer origem
 	fmt.Fprintf(w, "Hello World! %s", time.Now())
 }
 
+// register processa e responde a requisições POST com JSON
 func register(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close() // Fecha o corpo (evitando vazamento de memoria,e automaticamente)
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Permite requisições de qualquer origem
+	defer r.Body.Close()
 
 	type Person struct {
 		Name    string `json:"Name"`
@@ -33,19 +38,18 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	var person Person
 
-	body, err := io.ReadAll(r.Body) //Le o corpo da requisicao (Formulario)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Erro ao ler o corpo da requisição", http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(body, &person) //Pega o que recebe no corpo da requisiscao(bytes) e passa para o tipo struct
+	err = json.Unmarshal(body, &person)
 	if err != nil {
 		http.Error(w, "Erro ao analisar JSON", http.StatusBadRequest)
 		return
 	}
 
 	fmt.Println("Corpo da requisição:", string(body))
-	fmt.Fprintf(w, "Nome: %s %s,Idade: %d", person.Name, person.Surname, person.Age)
-
+	fmt.Fprintf(w, "Nome: %s %s, Idade: %d", person.Name, person.Surname, person.Age)
 }
